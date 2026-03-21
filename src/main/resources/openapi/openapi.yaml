@@ -1,0 +1,314 @@
+openapi: 3.0.3
+
+info:
+  title: DataService API
+  description: OpenAPI-спецификация для сервиса DataService
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Локальный сервер разработки
+
+tags:
+  - name: data_history
+    description: Доступ к истории данных с датчиков
+
+paths:
+  /users:
+    post:
+      summary: Добавление нового пользователя
+      operationId: AddUser
+      tags:
+        - data_history
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+            example:
+              ip_address: "80.237.33.119"
+              topic: "aha/HBed"
+              user_name: "user"
+              password: "1234"
+              port: 1883
+      responses:
+        '201':
+          description: Пользователь успешно добавлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: Ошибка валидации входных данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: "VALIDATION_ERROR"
+                message: "Field 'ip_address' is required"
+
+  /users/{id}:
+    delete:
+      summary: Удаление пользователя
+      operationId: deleteUser
+      tags:
+        - data_history
+      parameters:
+        - name: id
+          in: path
+          description: ID пользоватеоя в таблице
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Пользователь удален
+        '400':
+          description: Ошибка валидации входных данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error_code: "VALIDATION_ERROR"
+                message: "Field 'id' is required"
+        '404':
+          description: Пользователь не найден по ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error_code: "PRODUCT_NOT_FOUND"
+                message: "User with id 999 not found"
+
+  /history/{id}:
+    get:
+      summary: Получить историю данных по названию датчика и периоду времени
+      operationId: getDataHistory
+      tags:
+        - data_history
+      parameters:
+        - name: id
+          in: path
+          description: ID товара в таблице
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+        - name: element
+          in: query
+          description: Название элемента
+          required: true
+          schema:
+            $ref: '#/components/schemas/Element'
+        - name: time
+          in: query
+          description: Дата-время
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: period
+          in: query
+          description: Какой период из даты вычленить (час, день, месяц год)
+          required: true
+          schema:
+            $ref: '#/components/schemas/Period'
+      responses:
+        '200':
+          description: История элемента за заданных период
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ElementListResponse'
+              example:
+                content:
+                  - user_id: 1
+                    element: CLEAR_CLOUDY
+                    time: "2026-03-11T16:00:00+03:00"
+                    period: HOUR
+                totalElements: 1
+        '400':
+          description: Ошибка валидации входных данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: "VALIDATION_ERROR"
+                message: "Field 'ip_address' is required"
+        '404':
+          description: Элемент не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: "ELEMENT_NOT_FOUND"
+                message: "Element with id 999 not found"
+
+
+components:
+  schemas:
+    UserCreate:
+      type: object
+      description: Данные для добавления нового пользователя
+      required:
+        - ip_address
+        - topic
+        - user_name
+        - password
+        - port
+      properties:
+        ip_address:
+          type: string
+          description: IP адрес в Mosquitto
+          minLength: 1
+          maxLength: 255
+          example: "80.237.33.119"
+        topic:
+          type: string
+          description: Название топика в Mosquitto
+          minLength: 1
+          maxLength: 255
+          example: "aha/HBed"
+        user_name:
+          type: string
+          description: Имя пользователя в Mosquitto
+          minLength: 1
+          maxLength: 255
+          example: "user"
+        password:
+          type: string
+          description: Пароль от Mosquitto
+          minLength: 1
+          maxLength: 255
+          example: "1234"
+        port:
+          type: integer
+          format: int32
+          description: Порт в Mosquitto
+          minimum: 0
+          example: 1883
+
+    UserResponse:
+      type: object
+      description: Информация о пользователе
+      required:
+        - id
+        - ip_address
+        - topic
+        - user_name
+        - password
+        - port
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Id пользователя в базе данных
+          minimum: 1
+          example: 1
+        ip_address:
+          type: string
+          description: IP адрес в Mosquitto
+          minLength: 1
+          maxLength: 255
+          example: "80.237.33.119"
+        topic:
+          type: string
+          description: Название топика в Mosquitto
+          minLength: 1
+          maxLength: 255
+          example: "aha/HBed"
+        user_name:
+          type: string
+          description: Имя пользователя в Mosquitto
+          minLength: 1
+          maxLength: 255
+          example: "user"
+        password:
+          type: string
+          description: Пароль от Mosquitto
+          minLength: 1
+          maxLength: 255
+          example: "1234"
+        port:
+          type: integer
+          format: int32
+          description: Порт в Mosquitto
+          minimum: 0
+          example: 1883
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          type: string
+          description: Описание ошибки
+          example: "Field 'ip_address' is required"
+
+    ErrorCode:
+      type: string
+      description: Код ошибки
+      enum: [ VALIDATION_ERROR, ELEMENT_NOT_FOUND, USER_NOT_FOUND ]
+
+    Element:
+      type: string
+      description: Название элемента
+      enum: [ CLEAR_CLOUDY, RELAY_1, RELAY_2, RELAY_3, IF_EC, IF_PH, AIR_HUMIDITY, AIR_TEMPERATURE, FLUID_TEMPERATURE, FLUID_LEVEL, EC, LUX, PH ]
+
+    Period:
+      type: string
+      description: Какой период из даты вычленить (час, день, месяц год)
+      enum: [ HOUR, DAY, MONTH, YEAR ]
+
+    ElementListResponse:
+      type: object
+      description: Ответ со списком значений элемента.
+      required:
+        - content
+        - totalElements
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ElementResponse'
+        totalElements:
+          type: integer
+          format: int64
+
+    ElementResponse:
+      type: object
+      description: Ответ со значением элемента в определенный момент времени
+      required:
+        - user_id
+        - element
+        - time
+        - response
+      properties:
+        user_id:
+          type: integer
+          format: int64
+          description: ID пользователя в таблице
+          example: 1
+        element:
+          $ref: '#/components/schemas/Element'
+        time:
+          type: string
+          format: date-time
+          description: Дата-время
+          example: "2026-03-04T10:00:00Z"
+        response:
+          type: string
+          description: Значение элемента в это время
+          example: "25.5"

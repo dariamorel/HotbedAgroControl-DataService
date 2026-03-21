@@ -48,8 +48,8 @@ open class UsersController(
 
     @Transactional
     override fun deleteUser(id: Long): ResponseEntity<Unit> {
-        val entity = usersRepository.findById(id).orElseThrow { UserNotFoundException(id) }
         dataService.disconnect(id)
+        val entity = usersRepository.findById(id).orElseThrow { UserNotFoundException(id) }
         usersRepository.delete(entity)
         log.debug("User deleted!")
         return ResponseEntity.noContent().build()

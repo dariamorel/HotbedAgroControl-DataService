@@ -2,7 +2,7 @@ services:
   dataservice:
     build: .
     ports:
-      - "8080:8080"
+      - "8081:8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/history_db
       SPRING_DATASOURCE_USERNAME: postgres
@@ -18,11 +18,11 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: history_db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d history_db"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5

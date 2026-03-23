@@ -23,6 +23,17 @@ open class UsersController(
 
     @Transactional
     override fun addUser(userCreate: UserCreate): ResponseEntity<UserResponse> {
+        val existing = usersRepository.findExistingUser(
+            topic = userCreate.topic,
+            userName = userCreate.userName,
+            password = userCreate.password,
+            port = userCreate.port
+        )
+        if (existing != null) {
+            log.debug("User already exists, returning existing user")
+            return ResponseEntity.ok(existing.toResponse())
+        }
+
         val entity = UserEntity().apply {
             ipAddress = userCreate.ipAddress
             topic = userCreate.topic
@@ -34,16 +45,7 @@ open class UsersController(
         val userId = saved.id ?: throw IllegalStateException("Saved user has no id")
         connectUser(userId, userCreate)
         log.debug("User added!")
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-            UserResponse(
-                id = saved.id ?: 0L,
-                ipAddress = saved.ipAddress,
-                topic = saved.topic,
-                userName = saved.userName,
-                password = saved.password,
-                port = saved.port
-            )
-        )
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved.toResponse())
     }
 
     @Transactional
@@ -60,4 +62,13 @@ open class UsersController(
             mqttMessageHandler.handleMessage(userId, topic, response)
         }
     }
+
+    private fun UserEntity.toResponse(): UserResponse = UserResponse(
+        id = id ?: 0L,
+        ipAddress = ipAddress,
+        topic = topic,
+        userName = userName,
+        password = password,
+        port = port
+    )
 }

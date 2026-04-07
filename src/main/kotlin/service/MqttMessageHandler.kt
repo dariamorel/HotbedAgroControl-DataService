@@ -20,6 +20,7 @@ class MqttMessageHandler(
 
     fun handleMessage(userId: Long, topicString: String, responseString: String) {
         val definedElement = defineElement(topicString) ?: return
+        log.debug("Got element: $definedElement")
         val key = "${userId}_${definedElement.name}"
         val now = System.currentTimeMillis()
         val last = lastProcessedPerUserAndElement.getOrDefault(key, 0L)

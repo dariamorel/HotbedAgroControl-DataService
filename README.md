@@ -11,7 +11,7 @@ DataService - это backend-сервис, написанный на Kotlin и S
 - **MQTT**: подключение к брокеру по данным из БД, подписка на топики, разбор сообщений и запись в таблицу истории
 - **PostgreSQL** + **Flyway**: таблица и миграции к ней
 - **Swagger UI**
-- сборка через **docker-compose** приложения, БД и pgAdmin.
+- сборка через **docker-compose** приложения и БД.
 
 ## Запуск через Docker Compose
 
@@ -39,12 +39,3 @@ Swagger UI доступен по адресу:
 
 **http://localhost:8081/swagger-ui.html**
 
-### pgAdmin
-
-1. PgAdmin доступен по адресу: **http://localhost:5050**
-2. Вход с учётными данными из `docker-compose.yml`
-3. Сервер PostgreSQL:
-   - **Host**: `postgres`
-   - **Port**: `5432`
-   - **Username / Password**: `postgres`
-   - **Database**: `history_db`

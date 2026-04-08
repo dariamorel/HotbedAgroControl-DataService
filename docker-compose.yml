@@ -18,7 +18,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: history_db
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -27,17 +27,6 @@ services:
       timeout: 5s
       retries: 10
       start_period: 40s
-
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    environment:
-      PGADMIN_DEFAULT_EMAIL: dar_mrl@example.com
-      PGADMIN_DEFAULT_PASSWORD: Fox2010
-    ports:
-      - "5050:80"
-    depends_on:
-      postgres:
-        condition: service_healthy
 
 volumes:
   postgres_data:

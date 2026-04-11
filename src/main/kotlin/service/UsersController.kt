@@ -23,11 +23,19 @@ open class UsersController(
 
     @Transactional
     override fun addUser(userCreate: UserCreate): ResponseEntity<UserResponse> {
-        val existing = usersRepository.findExistingUser(
-            topic = userCreate.topic,
-            userName = userCreate.userName,
-            password = userCreate.password,
+        val newUser = userCreate.copy(
+            ipAddress = userCreate.ipAddress.trim(),
+            topic = userCreate.topic.trim(),
+            userName = userCreate.userName.trim(),
+            password = userCreate.password.trim(),
             port = userCreate.port
+        )
+        val existing = usersRepository.findExistingUser(
+            ipAddress = newUser.ipAddress,
+            topic = newUser.topic,
+            userName = newUser.userName,
+            password = newUser.password,
+            port = newUser.port
         )
         if (existing != null) {
             log.debug("User already exists, returning existing user")
@@ -35,15 +43,15 @@ open class UsersController(
         }
 
         val entity = UserEntity().apply {
-            ipAddress = userCreate.ipAddress
-            topic = userCreate.topic
-            userName = userCreate.userName
-            password = userCreate.password
-            port = userCreate.port
+            ipAddress = newUser.ipAddress
+            topic = newUser.topic
+            userName = newUser.userName
+            password = newUser.password
+            port = newUser.port
         }
         val saved = usersRepository.save(entity)
         val userId = saved.id ?: throw IllegalStateException("Saved user has no id")
-        connectUser(userId, userCreate)
+        connectUser(userId, newUser)
         log.debug("User added!")
         return ResponseEntity.status(HttpStatus.CREATED).body(saved.toResponse())
     }
@@ -51,9 +59,9 @@ open class UsersController(
     @Transactional
     override fun deleteUser(id: Long): ResponseEntity<Unit> {
         dataService.disconnect(id)
-        val entity = usersRepository.findById(id).orElseThrow { UserNotFoundException(id) }
-        usersRepository.delete(entity)
-        log.debug("User deleted!")
+//        val entity = usersRepository.findById(id).orElseThrow { UserNotFoundException(id) }
+//        usersRepository.delete(entity)
+        log.debug("User with id $id disconnected!")
         return ResponseEntity.noContent().build()
     }
 

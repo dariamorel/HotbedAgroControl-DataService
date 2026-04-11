@@ -15,6 +15,12 @@ import java.util.concurrent.ConcurrentHashMap
 @Service
 class DataService {
 
+    class MqttConnectionException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
+
+    companion object {
+        private const val CONNECTION_TIMEOUT_SECONDS = 10
+    }
+
     private data class MqttSession(
         val client: MqttClient,
         val userCreate: UserCreate,
@@ -33,6 +39,7 @@ class DataService {
             isCleanSession = false
             userName = userCreate.userName
             password = userCreate.password.toCharArray()
+            connectionTimeout = CONNECTION_TIMEOUT_SECONDS
         }
 
         val client = MqttClient(
@@ -40,9 +47,6 @@ class DataService {
             "${MqttClient.generateClientId()}_$userId",
             MemoryPersistence()
         )
-
-        val session = MqttSession(client, userCreate, onMessageReceived)
-        sessions[userId] = session
 
         client.setCallback(object : MqttCallback {
             override fun connectionLost(cause: Throwable?) {
@@ -62,12 +66,20 @@ class DataService {
 
         try {
             client.connect(options)
-            if (client.isConnected) {
-                log.debug("Connected!")
+            if (!client.isConnected) {
+                throw MqttConnectionException("MQTT client did not connect")
             }
+            log.debug("Connected!")
             client.subscribe("${userCreate.topic}/#", 1)
+            val session = MqttSession(client, userCreate, onMessageReceived)
+            sessions[userId] = session
         } catch (e: Exception) {
+            try {
+                client.close()
+            } catch (_: Exception) {
+            }
             log.warn("Connection error: ${e.message}.")
+            throw MqttConnectionException("Не удалось подключиться к MQTT broker", e)
         }
     }
 

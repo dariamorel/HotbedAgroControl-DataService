@@ -39,6 +39,15 @@ class ApiExceptionHandler {
         )
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error)
     }
+
+    @ExceptionHandler(DataService.MqttConnectionException::class)
+    fun handleMqttConnectionError(ex: DataService.MqttConnectionException): ResponseEntity<Error> {
+        val error = Error(
+            code = ErrorCode.VALIDATION_ERROR,
+            message = ex.message ?: "Не удалось подключиться к MQTT broker",
+        )
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error)
+    }
 }
 
 class UserNotFoundException(id: Long) : RuntimeException("Пользователь с id $id не найден")
